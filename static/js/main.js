@@ -63,9 +63,27 @@ document.addEventListener("DOMContentLoaded", () => {
         if (i == 0) {
             if (name === correct) {
                 disableInputAndDropdown();
-
+                const pleses = ["Numidotheriidae", "Barytheriidae"]
                 // Show popup message
-                const message = document.getElementById("correct-popup");
+                var message = document.getElementById("correct-popup");
+                var family = dict[correct][0][0];
+                var elephant = "proboscidea";
+                if(family == "Elephantidae"){
+                    elephant = "elephant";
+                }else if (family == "Mammutidae"){
+                    elephant = "mastodon";
+                }else if (pleses.includes(family)){
+                    elephant = "plesielephantiform";
+                }else if(family == "Basal Proboscidean"){
+                    elephant = "elephant's ancestor"
+                }else{
+                    elephant = family.toLowerCase();
+                }
+
+                if(correct.includes("Mammuthus")){
+                    elephant = "mammoth"
+                }
+                message.textContent = `you have addressed the ${elephant} in the room ✅`;
                 message.classList.remove("hidden");
 
                 // Show centered image
