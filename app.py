@@ -64,5 +64,5 @@ def next_reset():
     next_midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     return jsonify({"next_reset": next_midnight.isoformat()})
 
-if __name__ == '__main__':
-    app.run(debug=False, port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
