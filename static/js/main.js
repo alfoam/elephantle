@@ -21,9 +21,15 @@ const answers = document.getElementById("answers");
 //   });
 
 document.addEventListener("DOMContentLoaded", () => {
+
+    
+
     fetch("/data")
     .then(res => res.json())
     .then(data => {
+        dict = data.dict;
+        options = Object.keys(dict);
+        correct = data.correct;
         const savedSeed = localStorage.getItem("seed");
         if (savedSeed !== data.seed) {
             // New day or seed changed → clear guesses
@@ -40,12 +46,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        dict = data.dict;
-        options = Object.keys(dict);
-        correct = data.correct;
+        
 
 
     });
+
 
     // Call this when an answer is chosen
     function createRow(name) {
@@ -90,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 message.textContent = `you have addressed the ${elephant} in the room ✅`;
                 message.classList.remove("hidden");
-
+                
                 // Show centered image
                 const image = document.getElementById("correct-image");
                 image.src = dict[correct][5];
