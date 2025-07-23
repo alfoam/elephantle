@@ -12,7 +12,7 @@ with open("data.json", "r") as f:
     DICT = json.load(f)
 
 #CORRECT = "Phosphatherium"
-CORRECT = None
+CORRECT = random.choice(list(DICT))
 
 def pick_new_correct():
     global CORRECT
