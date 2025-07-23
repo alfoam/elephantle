@@ -6,8 +6,9 @@ from flask_cors import CORS
 
 import json
 import random
+import os
 
-should_clear_guesses = True 
+should_clear_guesses = True
 
 app = Flask(__name__)
 CORS(app)
@@ -15,29 +16,46 @@ CORS(app)
 with open("data.json", "r") as f:
     DICT = json.load(f)
 
-state = {
-    "correct": None,
-    "last_picked": None
-}
+STATE_FILE = "state.json"
 
-def pick_new_correct():
-    global should_clear_guesses
-    
-    state["correct"] = random.choice(list(DICT))
-    state["last_picked"] = datetime.now(timezone("US/Eastern"))
+def load_state():
+    if os.path.exists(STATE_FILE):
+        with open(STATE_FILE, "r") as f:
+            return json.load(f)
+    return {}
 
+def save_state(state):
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f)
+
+def get_current_date_str():
+    return datetime.now(timezone("US/Eastern")).strftime("%Y-%m-%d")
+
+def pick_new_correct(force=False):
+    global should_clear_guesses, state
+
+    today = get_current_date_str()
+    state = load_state()
+
+    # If already picked today and not forced, skip
+    if not force and state.get("date") == today:
+        print(f"Reusing today's CORRECT: {state['correct']}")
+        return
+
+    new_correct = random.choice(list(DICT))
+    state = {
+        "correct": new_correct,
+        "date": today
+    }
+    save_state(state)
     should_clear_guesses = True
-    print(f"New CORRECT selected: {state['correct']}")
+    print(f"New CORRECT selected: {new_correct}")
 
-# Initial run on startup
+# Initial pick on startup
 pick_new_correct()
 
-# Schedule it to run daily at 12 AM EST
+# Schedule to pick a new one daily at 12 AM EST
 scheduler = BackgroundScheduler(timezone="US/Eastern")
-
-#DEBUG
-#scheduler.add_job(func=pick_new_correct, trigger="interval", minutes=1)
-
 scheduler.add_job(func=pick_new_correct, trigger="cron", hour=0, minute=0)
 scheduler.start()
 
@@ -49,18 +67,16 @@ def get_data():
         "correct": state["correct"],
         "clear_guesses": should_clear_guesses
     }
-    # Reset the flag after sending
     should_clear_guesses = False
     return jsonify(response)
 
-
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('index.html')
+    return render_template("index.html")
 
 @app.route("/next_reset")
 def next_reset():
-    now = datetime.now(timezone('US/Eastern'))
+    now = datetime.now(timezone("US/Eastern"))
     next_midnight = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     return jsonify({"next_reset": next_midnight.isoformat()})
 
