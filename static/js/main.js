@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const dropdown = document.getElementById("dropdown-list");
     const answers = document.getElementById("answers");
     
-    fetch("http://localhost:5000/data")  
+    fetch("/data")  
     .then(res => res.json())
     .then(data => {
 
