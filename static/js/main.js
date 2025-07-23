@@ -42,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const savedGuesses = localStorage.getItem("guesses");
             if (savedGuesses) {
             guesses = JSON.parse(savedGuesses);
+            options = options.filter(x => !guesses.includes(x));
             guesses.forEach(name => createRow(name));
             }
         }
