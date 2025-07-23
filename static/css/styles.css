@@ -86,6 +86,13 @@ header {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
+.timer-box {
+  text-align: center;
+  color: #888;
+  font-size: 18px;
+  margin-top: 8px;
+  font-family: Arial, sans-serif;
+}
 
 #label-row {
     display: flex;
@@ -209,8 +216,8 @@ Flip animation
 }
 
 #image-preview img {
-  max-width: 300px;
-  max-height: 200px;
+  max-width: 500px;
+  max-height: 375px;
   border: 2px solid #3a3a3c;
   border-radius: 5px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.5);

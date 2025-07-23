@@ -3,20 +3,45 @@ let dict = {};
 let options = [];
 let correct = "";
 
-fetch("http://localhost:5000/data")  
+let guesses = [];
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    
+
+    const input = document.getElementById("guess-input");
+    const dropdown = document.getElementById("dropdown-list");
+    const answers = document.getElementById("answers");
+    
+    fetch("http://localhost:5000/data")  
     .then(res => res.json())
     .then(data => {
+
+        if (data.clear_guesses) {
+            localStorage.removeItem("guesses");
+            guesses = [];  // reset your guesses array too
+            document.getElementById("answers").innerHTML = "";  // clear UI guesses
+        }
+
         dict = data.dict;
         options = Object.keys(dict);
         correct = data.correct;
         console.log("Options loaded:", options);
+
+    
+
+    const savedGuesses = localStorage.getItem("guesses");
+    if (savedGuesses) {
+        guesses = JSON.parse(savedGuesses);
+        guesses.forEach(name => {
+            createRow(name);  // recreate each previous guess visually
+        });
+    }
     });
 
-document.addEventListener("DOMContentLoaded", () => {
-    const input = document.getElementById("guess-input");
-    const dropdown = document.getElementById("dropdown-list");
-    const answers = document.getElementById("answers");
-  
+
     // Call this when an answer is chosen
     function createRow(name) {
     const row = document.createElement("div");
@@ -107,9 +132,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const filtered = options.filter(option => {
             const lowerOption = option.toLowerCase();
-            const discovered = dict[option]?.[2]?.toString() || "";
+            const data = dict[option];
+            const discovered = (data?.[2] || "").toString();
+            const family = Array.isArray(data?.[0]) ? data[0].join(" ").toLowerCase() : (data?.[0] || "").toLowerCase();
+            const continent = Array.isArray(data?.[3]) ? data[3].join(" ").toLowerCase() : (data?.[3] || "").toLowerCase();
 
-            return lowerOption.includes(value) || discovered.includes(value);
+            return (
+                lowerOption.includes(value) ||
+                discovered.includes(value) ||
+                family.includes(value) ||
+                continent.includes(value)
+            );
         });
         
         if (filtered.length === 0 || value === "") {
@@ -159,7 +192,8 @@ document.addEventListener("DOMContentLoaded", () => {
             
                 // create the row
                 createRow(option);
-
+                guesses.push(option);
+                localStorage.setItem("guesses", JSON.stringify(guesses));
                 //clear input
                 input.value = "";
 
@@ -198,4 +232,35 @@ document.addEventListener("DOMContentLoaded", () => {
             dropdown.style.display = "none";  
         }
     }
+
+    fetch("/next_reset")
+    .then(res => res.json())
+    .then(data => {
+      const nextReset = new Date(data.next_reset);
+
+      function updateCountdown() {
+        const now = new Date();
+        const diff = nextReset - now;
+
+        if (diff <= 0) {
+          document.querySelector(".timer-box").textContent = "Resetting now...";
+          return;
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        document.querySelector(".timer-box").textContent =
+          `${hours}h ${minutes}m ${seconds}s until reset`;
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    })
+    .catch(err => {
+      console.error("Failed to load countdown:", err);
+      document.querySelector(".timer-box").textContent = "Timer unavailable";
+    });
+
 });
