@@ -1,14 +1,9 @@
 from flask import Flask, render_template, jsonify
-from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
 from datetime import datetime, timedelta
 from flask_cors import CORS
-
+import hashlib
 import json
-import random
-import os
-
-should_clear_guesses = True
 
 app = Flask(__name__)
 CORS(app)
@@ -16,58 +11,29 @@ CORS(app)
 with open("data.json", "r") as f:
     DICT = json.load(f)
 
-STATE_FILE = "state.json"
-
-def load_state():
-    if os.path.exists(STATE_FILE):
-        with open(STATE_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-def save_state(state):
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f)
+DICT_KEYS = list(DICT.keys())
 
 def get_current_date_str():
     return datetime.now(timezone("US/Eastern")).strftime("%Y-%m-%d")
 
-def pick_new_correct(force=False):
-    global should_clear_guesses, state
+def get_index_from_date(date_str, salt="secret_salt"):
+    raw = (date_str + salt).encode()
+    hashed = hashlib.sha256(raw).hexdigest()
+    return int(hashed, 16) % len(DICT_KEYS)
 
-    today = get_current_date_str()
-    state = load_state()
-
-    # If already picked today and not forced, skip
-    if not force and state.get("date") == today:
-        print(f"Reusing today's CORRECT: {state['correct']}")
-        return
-
-    new_correct = random.choice(list(DICT))
-    state = {
-        "correct": new_correct,
-        "date": today
-    }
-    save_state(state)
-    should_clear_guesses = True
-    print(f"New CORRECT selected: {new_correct}")
-
-# Initial pick on startup
-pick_new_correct()
-
-# Schedule to pick a new one daily at 12 AM EST
-scheduler = BackgroundScheduler(timezone="US/Eastern")
-scheduler.add_job(func=pick_new_correct, trigger="cron", hour=0, minute=0)
-scheduler.start()
+def get_correct_for_today():
+    today_str = get_current_date_str()
+    index = get_index_from_date(today_str)
+    return DICT_KEYS[index]
 
 @app.route("/data")
 def get_data():
-    global should_clear_guesses
+    correct = get_correct_for_today()
     response = {
         "dict": DICT,
-        "correct": state["correct"],
-        "clear_guesses": should_clear_guesses
+        "correct": correct,
+        "clear_guesses": True  # always true on fresh page load
     }
-    should_clear_guesses = False
     return jsonify(response)
 
 @app.route("/")
