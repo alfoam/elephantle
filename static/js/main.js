@@ -5,42 +5,47 @@ let correct = "";
 
 let guesses = [];
 
+const input = document.getElementById("guess-input");
+const dropdown = document.getElementById("dropdown-list");
+const answers = document.getElementById("answers");
 
+// fetch("/clear_guesses")
+//   .then(res => res.json())
+//   .then(data => {
+//     if (data.clear_guesses) {
+//       localStorage.removeItem("guesses");
+//       guesses = [];
+//       document.getElementById("answers").innerHTML = "";
+//       // Optionally reset other UI stuff here
+//     }
+//   });
 
 document.addEventListener("DOMContentLoaded", () => {
-
-    
-
-    const input = document.getElementById("guess-input");
-    const dropdown = document.getElementById("dropdown-list");
-    const answers = document.getElementById("answers");
-    
-    fetch("/data")  
+    fetch("/data")
     .then(res => res.json())
     .then(data => {
-
-        if (data.clear_guesses) {
+        const savedSeed = localStorage.getItem("seed");
+        if (savedSeed !== data.seed) {
+            // New day or seed changed → clear guesses
             localStorage.removeItem("guesses");
-            guesses = [];  // reset your guesses array too
-            document.getElementById("answers").innerHTML = "";  // clear UI guesses
+            guesses = [];
+            document.getElementById("answers").innerHTML = "";
+            localStorage.setItem("seed", data.seed);
+        } else {
+            // Same day → load guesses
+            const savedGuesses = localStorage.getItem("guesses");
+            if (savedGuesses) {
+            guesses = JSON.parse(savedGuesses);
+            guesses.forEach(name => createRow(name));
+            }
         }
 
         dict = data.dict;
         options = Object.keys(dict);
         correct = data.correct;
-        console.log("Options loaded:", options);
 
-    
 
-    const savedGuesses = localStorage.getItem("guesses");
-    if (savedGuesses) {
-        guesses = JSON.parse(savedGuesses);
-        guesses.forEach(name => {
-            createRow(name);  // recreate each previous guess visually
-        });
-    }
     });
-
 
     // Call this when an answer is chosen
     function createRow(name) {

@@ -14,7 +14,8 @@ with open("data.json", "r") as f:
 DICT_KEYS = list(DICT.keys())
 
 def get_current_date_str():
-    return datetime.now(timezone("US/Eastern")).strftime("%Y-%m-%d")
+    now = datetime.now(timezone("US/Eastern")) #+ timedelta(days=2)
+    return now.strftime("%Y-%m-%d")
 
 def get_index_from_date(date_str, salt="secret_salt"):
     raw = (date_str + salt).encode()
@@ -26,13 +27,22 @@ def get_correct_for_today():
     index = get_index_from_date(today_str)
     return DICT_KEYS[index]
 
+@app.route("/clear_guesses")
+def clear_guesses():
+    response = {
+        "clear_guesses": True
+    }
+    return jsonify(response)
+
 @app.route("/data")
 def get_data():
     correct = get_correct_for_today()
+    today_str = get_current_date_str()
+    seed = hashlib.sha256((today_str + "secret_salt").encode()).hexdigest()
     response = {
         "dict": DICT,
         "correct": correct,
-        "clear_guesses": True  # always true on fresh page load
+        "seed": seed
     }
     return jsonify(response)
 
