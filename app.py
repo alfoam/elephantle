@@ -33,7 +33,7 @@ def pick_new_correct():
 pick_new_correct()
 
 # Schedule it to run daily at 12 AM EST
-scheduler = BackgroundScheduler(timezone("US/Eastern"))
+scheduler = BackgroundScheduler(timezone="US/Eastern")
 
 #DEBUG
 #scheduler.add_job(func=pick_new_correct, trigger="interval", minutes=1)
