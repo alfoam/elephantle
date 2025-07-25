@@ -175,59 +175,56 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         
         if (filtered.length === 0 || value === "") {
-        dropdown.classList.add("hidden");
-        return;
+            dropdown.classList.add("hidden");
+            return;
         }
 
         filtered.forEach(option => {
             const div = document.createElement("div");
             div.classList.add("dropdown-option");
             const discovered = dict[option]?.[2] || "unknown";
+
             div.innerHTML = `
-                <div>${option}</div>
-                <div style="font-size: 0.85em; color: #aaa;">(discovered in ${discovered})</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div>${option}</div>
+                        <div style="font-size: 0.85em; color: #aaa;">(discovered in ${discovered})</div>
+                    </div>
+                    <button class="preview-button" data-option="${option}" style="background: none; border: none; font-size: 1.2em; cursor: pointer;">🔍</button>
+                </div>
             `;
 
-            div.addEventListener("mouseenter", () => {
-                const imageUrl = dict[option][5]; // 
+            div.querySelector(".preview-button").addEventListener("click", (e) => {
+                e.stopPropagation(); // Prevent the dropdown from closing
+
                 const preview = document.getElementById("image-preview");
                 const previewImg = document.getElementById("preview-img");
-                previewImg.src = imageUrl;
+                previewImg.src = dict[option][5];
                 preview.classList.remove("hidden");
 
-                // Position below the visible dropdown list container
+                // Position below dropdown
                 const dropdownList = document.getElementById("dropdown-list");
                 const rect = dropdownList.getBoundingClientRect();
-
-                const offset = 8; // pixels margin
+                const offset = 8;
                 preview.style.top = `${rect.bottom + window.scrollY + offset}px`;
-
-                // Center horizontally by CSS transform, so no left needed here
-            });
-
-            div.addEventListener("mouseleave", () => {
-                document.getElementById("image-preview").classList.add("hidden");
             });
 
             div.addEventListener("click", () => {
                 input.value = option;
                 dropdown.classList.add("hidden");
-                // guess logic
-                console.log("You selected:", option);
 
                 // remove option from list
                 const index = options.indexOf(option);
                 if (index > -1) options.splice(index, 1);
-            
-                // create the row
+
                 createRow(option);
                 guesses.push(option);
                 localStorage.setItem("guesses", JSON.stringify(guesses));
-                //clear input
                 input.value = "";
-
+                document.getElementById("image-preview").classList.add("hidden");
             });
-        dropdown.appendChild(div);
+
+            dropdown.appendChild(div);
         });
 
         dropdown.classList.remove("hidden");
@@ -237,6 +234,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("click", (e) => {
         if (!document.getElementById("dropdown-wrapper").contains(e.target)) {
         dropdown.classList.add("hidden");
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        if (!document.getElementById("dropdown-wrapper").contains(e.target)) {
+            dropdown.classList.add("hidden");
+            document.getElementById("image-preview").classList.add("hidden");
         }
     });
 
