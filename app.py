@@ -21,7 +21,7 @@ def get_index_from_date(date_str, salt="secret_salt"):
     raw = (date_str + salt).encode()
     hashed = hashlib.sha256(raw).hexdigest()
     return int(hashed, 16) % len(DICT_KEYS)
-
+#sajdliasjdlasjd
 def get_correct_for_today():
     today_str = get_current_date_str()
     index = get_index_from_date(today_str)
